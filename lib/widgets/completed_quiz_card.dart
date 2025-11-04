@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:loginsignup/models/quiz_model.dart';
 
 class CompletedQuizCard extends StatelessWidget {
   final MapEntry<String, dynamic> quizEntry;
+  final List<QuizSummary> quizSummaries;
 
-  const CompletedQuizCard({super.key, required this.quizEntry});
+  const CompletedQuizCard({
+    super.key,
+    required this.quizEntry,
+    required this.quizSummaries,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,49 +28,100 @@ class CompletedQuizCard extends StatelessWidget {
     final date = DateTime.tryParse(latestData['date']?.toString() ?? '') ??
         DateTime.now();
 
+    final quizSummary = quizSummaries.firstWhere(
+          (q) => q.id == quizId,
+      orElse: () => QuizSummary(id: quizId, categoryId: '', title: '', totalQuestions: total, duration: '', rating: '0', imageAsset: ''),
+    );
+
     return Container(
+      width: double.infinity,
+      height: 96.h,
       margin: EdgeInsets.symmetric(vertical: 5.h),
-      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 15.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1A333333),
-            offset: Offset(0, 4),
-            blurRadius: 10,
+            offset: Offset(10, 24),
+            blurRadius: 54,
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Quiz: $quizId",
-                style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87),
+      child: Padding(
+        padding: EdgeInsets.all(10.w),
+        child: Row(
+          children: [
+            // Quiz Image
+            Container(
+              width: 72.w,
+              height: 72.h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.r),
+                color: Colors.grey[200],
               ),
-              SizedBox(height: 4.h),
-              Text(
-                "${date.day}/${date.month}/${date.year}",
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10.r),
+                child: Image.asset(
+                  quizSummary.imageAsset.isNotEmpty
+                      ? quizSummary.imageAsset
+                      : 'assets/placeholder.png',
+                  fit: BoxFit.cover,
+                ),
               ),
-            ],
-          ),
-          Text(
-            "$score / $total",
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.indigo,
             ),
-          ),
-        ],
+            SizedBox(width: 10.w),
+            // Quiz Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    quizSummary.title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: Colors.blueGrey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 5.h),
+                  Row(
+                    children: [
+                      const Icon(Icons.date_range, color: Colors.grey, size: 16),
+                      SizedBox(width: 5.w),
+                      Text(
+                        "${date.day}/${date.month}/${date.year}",
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Score Badge
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                "$score/$total",
+                style: TextStyle(
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

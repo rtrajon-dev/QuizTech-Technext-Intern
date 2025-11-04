@@ -83,32 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // void handleLogin(BuildContext context) async {
-  //   if (_formKey.currentState!.validate()) {
-  //     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-  //
-  //     try {
-  //       await authProvider.login(
-  //         emailController.text.trim(),
-  //         passwordController.text.trim(),
-  //       );
-  //
-  //       if (authProvider.isLoggedIn) {
-  //         showBottomToast("Login successful", bgColor: Colors.green);
-  //         Navigator.pushReplacementNamed(context, '/main');
-  //       } else {
-  //         showBottomToast("Login failed. Check credentials", bgColor: Colors.red);
-  //       }
-  //     } catch (e) {
-  //       // showBottomToast("Error: $e", bgColor: Colors.red);
-  //       String errorMessage = e.toString();
-  //       if (errorMessage.startsWith("Exception: ")) {
-  //         errorMessage = errorMessage.replaceFirst("Exception: ", "");
-  //       }
-  //       showBottomToast(errorMessage, bgColor: Colors.red);
-  //     }
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: InputDecoration(
                         labelText: "Email",
                         hintText: "Enter your email",
-                        prefixIcon: const Icon(Icons.email),
+                        prefixIcon: const Icon(Icons.email, color: Colors.green,),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
@@ -239,6 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             : const Text(
                           "Login",
                           style: TextStyle(
+                            color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),

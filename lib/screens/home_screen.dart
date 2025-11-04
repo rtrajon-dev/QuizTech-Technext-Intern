@@ -269,9 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
+                  //quiz card
                   Container(
                     width: double.infinity,
-                    height: 1500.h,
+                    // height: 400.h,
+                    // height: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
@@ -366,86 +368,97 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           ),
                           // White container with completed quizzes
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(15.w),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12.r),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x1A333333),
-                                  offset: Offset(0, 4),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Quiz History",
-                                  style: TextStyle(
-                                    color: Colors.blueGrey,
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 10.h),
-
-                                // List of completed quizzes
-                                Consumer<ScoreProvider>(
-                                  builder: (context, scoreProvider, _) {
-                                    final scores = scoreProvider.scores;
-
-                                    if (scores.isEmpty) {
-                                      return Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 5.h),
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // Motivational icon or image
-                                              Icon(
-                                                Icons.emoji_events_outlined,
-                                                size: 36.sp,
-                                                color: Colors.blueAccent,
-                                              ),
-                                              SizedBox(height: 8.h),
-                                              // Motivational text
-                                              Text(
-                                                "Your first quiz awaits!\nChallenge yourself & start learning!",
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Colors.grey[700],
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                  height: 1.3, // makes it a bit more readable
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }
-
-
-                                    return Column(
-                                      children: [
-                                        for (var entry in scores)
-                                          CompletedQuizCard(quizEntry: entry),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 150.h),
+                          // SizedBox(height: 150.h),
                         ],
                       ),
                     ),
                   ),
+                  //quiz history
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(0.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      // borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x1A333333),
+                          // color: Colors.black,
+                          offset: Offset(0, 0),
+                          blurRadius: 50,
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Quiz History",
+                            style: TextStyle(
+                              color: Colors.blueGrey,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 10.h),
+
+                          // List of completed quizzes
+                          Consumer<ScoreProvider>(
+                            builder: (context, scoreProvider, _) {
+                              final scores = scoreProvider.scores;
+
+                              if (scores.isEmpty) {
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 5.h),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Motivational icon or image
+                                        Icon(
+                                          Icons.emoji_events_outlined,
+                                          size: 36.sp,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        SizedBox(height: 8.h),
+                                        // Motivational text
+                                        Text(
+                                          "Your first quiz awaits!\nChallenge yourself & start learning!",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey[700],
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.3, // makes it a bit more readable
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              return Column(
+                                children: [
+                                  for (var entry in scores)
+                                    CompletedQuizCard(quizEntry: entry, quizSummaries: quizSummaries,),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // SizedBox(height: 200.h,),
+                  Container(
+                    height: 200.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                    ),
+                  )
                 ],
               ),
             ),
