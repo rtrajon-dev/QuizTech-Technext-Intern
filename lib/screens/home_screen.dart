@@ -7,8 +7,10 @@ import 'package:loginsignup/constants/app_colors.dart';
 import 'package:loginsignup/models/quiz_model.dart';
 import 'package:loginsignup/data/dummy_data.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
+import 'package:loginsignup/provider/score_provider.dart';
 import 'package:loginsignup/screens/details_screen.dart';
 import 'package:loginsignup/screens/quiz_screen.dart';
+import 'package:loginsignup/widgets/completed_quiz_card.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -56,12 +58,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState(){
     super.initState();
 
+    final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
+    scoreProvider.loadScores();
+
     //listen to an changes in 'quiz_progress' box
     box.listenable().addListener(_refreshLastQuiz);
 
     // _loadLastQuiz();
     _loadAllPlayedQuizzes();
     _startPeriodicExpiryCheck();
+
+
   }
 
   @override
@@ -73,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _refreshLastQuiz(){
     // _loadLastQuiz();
     _loadAllPlayedQuizzes();
+    Provider.of<ScoreProvider>(context, listen: false).loadScores();
   }
 
   void _startPeriodicExpiryCheck() {
@@ -138,9 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
-
-
-
   void _loadAllPlayedQuizzes() {
     final box = Hive.box('quiz_progress');
     final allSaved = Map<String, dynamic>.from(
@@ -185,11 +190,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+
     final user = authProvider.user?['user'];
     final userName = user?['fullName'] ?? 'User';
     final filteredQuizzes = quizSummaries.where((q) => q.categoryId == selectedCategoryId && q.title.toLowerCase().contains(searchText.toLowerCase())).toList();
 
     final allScores = Map<String, dynamic>.from(box.get('all_scores', defaultValue: {}) as Map);
+
     // final playedQuizIds = allScores.keys.toSet();
 
     return Container(
@@ -264,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Container(
                     width: double.infinity,
-                    height: 751.h,
+                    height: 1500.h,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
@@ -357,12 +364,84 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               );
                             }
-
-
                           ),
+                          // White container with completed quizzes
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(15.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1A333333),
+                                  offset: Offset(0, 4),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Quiz History",
+                                  style: TextStyle(
+                                    color: Colors.blueGrey,
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 10.h),
 
+                                // List of completed quizzes
+                                Consumer<ScoreProvider>(
+                                  builder: (context, scoreProvider, _) {
+                                    final scores = scoreProvider.scores;
+
+                                    if (scores.isEmpty) {
+                                      return Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.h),
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Motivational icon or image
+                                              Icon(
+                                                Icons.emoji_events_outlined,
+                                                size: 36.sp,
+                                                color: Colors.blueAccent,
+                                              ),
+                                              SizedBox(height: 8.h),
+                                              // Motivational text
+                                              Text(
+                                                "Your first quiz awaits!\nChallenge yourself & start learning!",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Colors.grey[700],
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w500,
+                                                  height: 1.3, // makes it a bit more readable
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+
+                                    return Column(
+                                      children: [
+                                        for (var entry in scores)
+                                          CompletedQuizCard(quizEntry: entry),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
                           SizedBox(height: 150.h),
-
                         ],
                       ),
                     ),

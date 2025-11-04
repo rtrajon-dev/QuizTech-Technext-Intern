@@ -99,7 +99,7 @@ class _MainLayoutState extends State<MainLayout> {
           if (notification.metrics.axis == Axis.vertical) {
             final offset = notification.metrics.pixels;
             setState(() {
-              _appBarOpacity = (offset / 180).clamp(0.0, 1.0);
+              _appBarOpacity = (offset / 100).clamp(0.0, 1.0);
             });
           }
           return false;
