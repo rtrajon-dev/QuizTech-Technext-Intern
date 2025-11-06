@@ -452,13 +452,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  // SizedBox(height: 200.h,),
                   Container(
-                    height: 200.h,
+                    height: 50.h,
                     decoration: BoxDecoration(
                       color: Colors.white,
                     ),
-                  )
+                  ),
+                  // SizedBox(height: 200.h,),
+                  if (allPlayedQuizzes.isNotEmpty)
+                    Container (
+                      height: 200.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                      ),
+                    ),
                 ],
               ),
             ),

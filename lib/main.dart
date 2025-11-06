@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:loginsignup/layout/main_layout.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
 import 'package:loginsignup/provider/score_provider.dart';
+import 'package:loginsignup/provider/sound_provider.dart';
 import 'package:loginsignup/screens/dashboard_screen.dart';
 import 'package:loginsignup/screens/details_screen.dart';
 import 'package:loginsignup/screens/home_screen.dart';
@@ -24,7 +25,8 @@ void main() async {
     MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
-          ChangeNotifierProvider(create: (_) => ScoreProvider()),
+          ChangeNotifierProvider(create: (_) => ScoreProvider()..loadScores()),
+          ChangeNotifierProvider(create: (_) => SoundProvider()),
         ],
         child: ScreenUtilInit(
           designSize: const Size(375, 812),
@@ -33,18 +35,6 @@ void main() async {
         ),
     ),
   );
-
-  // runApp(
-  //   ChangeNotifierProvider(
-  //     create: (_) => AuthProvider(),
-  //     // child: const MyApp(),
-  //     child: ScreenUtilInit(
-  //       designSize: const Size(375, 812),
-  //       minTextAdapt: true,
-  //       builder: (context, child) => const MyApp(),
-  //     ),
-  //   ),
-  // );
 }
 
 class MyApp extends StatelessWidget {

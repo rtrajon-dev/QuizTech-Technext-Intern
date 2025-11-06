@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:loginsignup/constants/app_colors.dart';
 import 'package:loginsignup/models/quiz_model.dart';
+import 'package:loginsignup/provider/sound_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -16,8 +19,8 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  // int countdown = 0;
-  // Timer? countdownTimer;
+  final player = AudioPlayer();
+
 
   String feedbackText = "";
   Color feedbackColor = Colors.blue;
@@ -37,6 +40,8 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   void dispose() {
+    player.stop();
+    player.dispose();
     countdownTimer?.cancel();
     super.dispose();
   }
@@ -46,6 +51,27 @@ class _QuizScreenState extends State<QuizScreen> {
     super.initState();
     _loadProgress();
     _startTimer();
+  }
+
+  void playCorrectSound(BuildContext context) {
+    final soundProvider = Provider.of<SoundProvider>(context, listen: false);
+    if (soundProvider.soundOn) {
+      player.play(AssetSource('correct.wav'));
+    }
+  }
+
+  void playWrongSound(BuildContext context) {
+    final soundProvider = Provider.of<SoundProvider>(context, listen: false);
+    if (soundProvider.soundOn) {
+      player.play(AssetSource('wrong.wav'));
+    }
+  }
+
+  void playScoreSound(BuildContext context) {
+    final soundProvider = Provider.of<SoundProvider>(context, listen: false);
+    if (soundProvider.soundOn) {
+      player.play(AssetSource('score.wav'));
+    }
   }
 
   void _startTimer() {
@@ -153,6 +179,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     final quiz = widget.quizDetail;
     final currentQuestion = quiz.questions[currentQuestionIndex];
 
@@ -265,13 +292,16 @@ class _QuizScreenState extends State<QuizScreen> {
                       SizedBox(height: 24.h),
 
                       // Question text
-                      Text(
-                        currentQuestion.text,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontFamily: 'Ubuntu',
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                      SizedBox(
+                        height: 60,
+                        child: Text(
+                          currentQuestion.text,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontFamily: 'Ubuntu',
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                       SizedBox(height: 20.h),
@@ -295,11 +325,16 @@ class _QuizScreenState extends State<QuizScreen> {
                                     isCorrect = true;
                                     feedbackText = "Correct!";
                                     feedbackColor = Colors.green;
+                                    playCorrectSound(context);
+
+                                    // _audioPlayer.play(AssetSource('correct.wav'));
                                   } else {
                                     isCorrect = false;
                                     feedbackText =
                                       "Wrong! Correct answer: ${currentQuestion.options.firstWhere((o) => o.id == currentQuestion.correctOptionId).text}";
                                     feedbackColor = Colors.red;
+                                    playWrongSound(context);
+                                    // _audioPlayer.play(AssetSource('wrong.wav'));
                                   }
 
                                   _saveProgress();
@@ -410,7 +445,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       ),
 
 
-                      SizedBox(height: 90.h),
+                      SizedBox(height: 80.h),
 
                       // Bottom Buttons
                       Row(
@@ -586,65 +621,6 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  // Widget _buildProgressRow(QuizDetail quiz) {
-  //   final scrollController = ScrollController();
-  //
-  //   // Automatically scroll to active circle when question changes
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     double position = currentQuestionIndex * 60.0; // adjust based on item width
-  //     scrollController.animateTo(
-  //       position,
-  //       duration: const Duration(milliseconds: 300),
-  //       curve: Curves.easeInOut,
-  //     );
-  //   });
-  //
-  //   return SizedBox(
-  //     height: 70.h, // fixed height for row section
-  //     child: ListView.builder(
-  //       controller: scrollController,
-  //       scrollDirection: Axis.horizontal,
-  //       itemCount: quiz.questions.length,
-  //       itemBuilder: (context, index) {
-  //         bool isActive = index == currentQuestionIndex;
-  //         bool isAnswered = selectedAnswers.containsKey(quiz.questions[index].id);
-  //
-  //         return Padding(
-  //           padding: EdgeInsets.symmetric(horizontal: 8.w),
-  //           child: Column(
-  //             children: [
-  //               CircleAvatar(
-  //                 radius: 20.r,
-  //                 backgroundColor: isActive
-  //                     ? Colors.blue
-  //                     : (isAnswered ? Colors.green : AppColors.grey),
-  //                 child: Text(
-  //                   "${index + 1}",
-  //                   style: TextStyle(
-  //                     fontSize: 16.sp,
-  //                     fontWeight: FontWeight.w500,
-  //                     color: Colors.white,
-  //                   ),
-  //                 ),
-  //               ),
-  //               SizedBox(height: 6.h),
-  //               Container(
-  //                 width: 40.w,
-  //                 height: 2.h,
-  //                 decoration: BoxDecoration(
-  //                   color: isActive
-  //                       ? Colors.blue
-  //                       : (isAnswered ? Colors.green : AppColors.grey),
-  //                   borderRadius: BorderRadius.circular(12.r),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
 
 
   /// Option tile
@@ -725,11 +701,11 @@ class _QuizScreenState extends State<QuizScreen> {
 
     _clearProgressForQuiz(quiz.id);
     _showResultDialog(correctCount, quiz);
-
-
   }
 
   void _showResultDialog(int score, QuizDetail quiz) {
+    playScoreSound(context);
+    // _audioPlayer.play(AssetSource('score.wav'));
 
     int yourScore = score * quiz.pointsPerCorrect;
 

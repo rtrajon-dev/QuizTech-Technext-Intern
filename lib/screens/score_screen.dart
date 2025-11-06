@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:loginsignup/constants/app_colors.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
+import 'package:loginsignup/utils/score_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -16,34 +17,27 @@ class ScoreScreen extends StatelessWidget {
 
     final box = Hive.box('quiz_progress');
     final allScoresRaw = box.get('all_scores');
-    final Map<String, dynamic> allScores =
-    (allScoresRaw is Map) ? Map<String, dynamic>.from(allScoresRaw) : {};
 
-    // Calculate total score
-    // Calculate total score only from latest attempts
-    int totalScore = 0;
-    allScores.forEach((quizId, scoresListRaw) {
-      final scoresList = (scoresListRaw is List) ? scoresListRaw : [];
-      if (scoresList.isNotEmpty) {
-        final latestData = (scoresList.last is Map)
-            ? Map<String, dynamic>.from(scoresList.last)
-            : {};
-        final score = (latestData['score'] is num)
-            ? (latestData['score'] as num).toInt()
-            : 0;
-        totalScore += score * 10; // same multiplier you use
-      }
-    });
-
+    final allScores = ScoreUtils.normalizeAllScores(allScoresRaw);
+    final totalScore = ScoreUtils.calculateTotalScore(allScores);
+    // final Map<String, dynamic> allScores =
+    // (allScoresRaw is Map) ? Map<String, dynamic>.from(allScoresRaw) : {};
+    //
+    // // Calculate total score
     // int totalScore = 0;
     // allScores.forEach((quizId, scoresListRaw) {
     //   final scoresList = (scoresListRaw is List) ? scoresListRaw : [];
-    //   for (var scoreItem in scoresList) {
-    //     final data = (scoreItem is Map) ? Map<String, dynamic>.from(scoreItem) : {};
-    //     final score = (data['score'] is num) ? (data['score'] as num).toInt() : 0;
-    //     totalScore += score * 10;
+    //   if (scoresList.isNotEmpty) {
+    //     final latestData = (scoresList.last is Map)
+    //         ? Map<String, dynamic>.from(scoresList.last)
+    //         : {};
+    //     final score = (latestData['score'] is num)
+    //         ? (latestData['score'] as num).toInt()
+    //         : 0;
+    //     totalScore += score * 10; // same multiplier you use
     //   }
     // });
+
 
     return Scaffold(
       body: Container(
@@ -189,21 +183,6 @@ class ScoreScreen extends StatelessWidget {
                                 color: Colors.indigo,
                               ),
                             ),
-                            // Row(
-                            //   children: [
-                            //     Text("You Attempt:", style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.normal, color: Colors.grey),),
-                            //     SizedBox(width: 3.w,),
-                            //     Text(
-                            //       "$score / $total",
-                            //       style: TextStyle(
-                            //         fontSize: 16.sp,
-                            //         fontWeight: FontWeight.bold,
-                            //         color: Colors.indigo,
-                            //       ),
-                            //     ),
-                            //   ],
-                            //
-                            // ),
                           ],
                         ),
                       );
