@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:loginsignup/layout/main_layout.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
+import 'package:loginsignup/provider/quiz_provider.dart';
 import 'package:loginsignup/provider/score_provider.dart';
 import 'package:loginsignup/provider/sound_provider.dart';
 import 'package:loginsignup/screens/dashboard_screen.dart';
@@ -27,6 +28,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => AuthProvider()),
           ChangeNotifierProvider(create: (_) => ScoreProvider()..loadScores()),
           ChangeNotifierProvider(create: (_) => SoundProvider()),
+          ChangeNotifierProvider(create: (_) => QuizProvider()),
         ],
         child: ScreenUtilInit(
           designSize: const Size(375, 812),

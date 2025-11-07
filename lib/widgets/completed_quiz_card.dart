@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:loginsignup/models/quiz_model.dart';
 
+//Quiz History
 class CompletedQuizCard extends StatelessWidget {
   final MapEntry<String, dynamic> quizEntry;
   final List<QuizSummary> quizSummaries;

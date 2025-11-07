@@ -345,10 +345,6 @@ class _QuizScreenState extends State<QuizScreen> {
                                   Future.delayed(const Duration(seconds: 3), () {
                                     setState(() {
                                       feedbackText = "";
-                                      // disableOptions = false;
-                                      // if (currentQuestionIndex < quiz.questions.length-1){
-                                      //   currentQuestionIndex++;
-                                      // }
                                     });
 
                                   });
@@ -459,7 +455,6 @@ class _QuizScreenState extends State<QuizScreen> {
                               setState(() {
                                 feedbackText = "";
                                 currentQuestionIndex--;
-                                // timeUp = false;
                               });
                               // _startTimer();
                             },

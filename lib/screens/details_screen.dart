@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:loginsignup/constants/app_colors.dart';
-import 'package:loginsignup/data/dummy_data.dart';
 import 'package:loginsignup/models/quiz_model.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
-import 'package:loginsignup/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'quiz_screen.dart';
 
@@ -345,7 +343,4 @@ class _DetailsScreenState extends State<DetailsScreen> {
       ],
     );
   }
-
-
-
 }

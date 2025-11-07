@@ -16,7 +16,6 @@ class _AvatarWithScoreState extends State<AvatarWithScore> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    // _loadScore();
     // Trigger animation after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() => _expanded = true);
@@ -37,48 +36,6 @@ class _AvatarWithScoreState extends State<AvatarWithScore> with SingleTickerProv
         final allScores = ScoreUtils.normalizeAllScores(allScoresRaw);
         final totalScore = ScoreUtils.calculateTotalScore(allScores);
 
-        // return Container(
-        //   padding: const EdgeInsets.all(2),
-        //   decoration: BoxDecoration(
-        //     color: Colors.blue.shade50, // background color of the rectangle
-        //     borderRadius: BorderRadius.circular(20), // rounded rectangle
-        //     boxShadow: [
-        //       BoxShadow(
-        //         color: Colors.black.withOpacity(0.1),
-        //         blurRadius: 6,
-        //         offset: const Offset(0, 3),
-        //       ),
-        //     ],
-        //   ),
-        //   child: AnimatedContainer(
-        //
-        //     duration: const Duration(milliseconds: 400),
-        //     curve: Curves.easeOutCubic,
-        //     padding: EdgeInsets.symmetric(horizontal: _expanded ? 12 : 0),
-        //     child: Row(
-        //       mainAxisSize: MainAxisSize.min,
-        //       children: [
-        //         CircleAvatar(
-        //           radius: 16,
-        //           backgroundColor: Colors.white,
-        //           backgroundImage: widget.profileImg.isNotEmpty
-        //               ? NetworkImage(widget.profileImg)
-        //               : const AssetImage('assets/default_avatar.png') as ImageProvider,
-        //         ),
-        //         if (_expanded) ...[
-        //           const SizedBox(width: 8),
-        //           Text(
-        //             'Score: $totalScore',
-        //             style: const TextStyle(
-        //               fontWeight: FontWeight.bold,
-        //               color: Colors.blue,
-        //             ),
-        //           ),
-        //         ],
-        //       ],
-        //     ),
-        //   ),
-        // );
         return GestureDetector(
           onTap: () {
             setState(() {

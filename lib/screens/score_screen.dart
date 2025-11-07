@@ -20,24 +20,6 @@ class ScoreScreen extends StatelessWidget {
 
     final allScores = ScoreUtils.normalizeAllScores(allScoresRaw);
     final totalScore = ScoreUtils.calculateTotalScore(allScores);
-    // final Map<String, dynamic> allScores =
-    // (allScoresRaw is Map) ? Map<String, dynamic>.from(allScoresRaw) : {};
-    //
-    // // Calculate total score
-    // int totalScore = 0;
-    // allScores.forEach((quizId, scoresListRaw) {
-    //   final scoresList = (scoresListRaw is List) ? scoresListRaw : [];
-    //   if (scoresList.isNotEmpty) {
-    //     final latestData = (scoresList.last is Map)
-    //         ? Map<String, dynamic>.from(scoresList.last)
-    //         : {};
-    //     final score = (latestData['score'] is num)
-    //         ? (latestData['score'] as num).toInt()
-    //         : 0;
-    //     totalScore += score * 10; // same multiplier you use
-    //   }
-    // });
-
 
     return Scaffold(
       body: Container(
