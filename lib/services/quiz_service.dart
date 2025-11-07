@@ -26,4 +26,35 @@ class QuizService {
 
     return sortedEntries;
   }
+
+  Future<void> addScore({
+    required String quizId,
+    required int score,
+    required int attempted,
+    required int total,
+  }) async {
+    // 1. Get the current map of all scores
+    final allScores = getAllScores();
+
+    // 2. Prepare the data for the new score entry
+    final newScoreData = {
+      'score': score,
+      'attempted': attempted,
+      'total': total,
+      'date': DateTime.now().toIso8601String(), // Record the time of completion
+    };
+
+
+    // 3. Get the existing list of scores for this quizId, or create a new one
+    final quizScores = (allScores[quizId] as List<dynamic>?)?.toList() ?? [];
+
+    // 4. Add the new score data to the list
+    quizScores.add(newScoreData);
+
+    // 5. Update the main scores map with the modified list
+    allScores[quizId] = quizScores;
+
+    // 6. Save the entire updated map back to Hive
+    await _box.put('all_scores', allScores);
+  }
 }

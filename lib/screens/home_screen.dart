@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -23,38 +22,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final box = Hive.box('quiz_progress');
-
-  Map<String, dynamic>? lastQuiz;
-  String selectedCategoryId = 'popular';
-  String searchText = '';
-
-  List<Map<String, dynamic>> allPlayedQuizzes = [];
-  Timer? _expiryCheckTimer;
-
-  final ongoingQuizIds = Set<String>.from(
-    Hive.box('quiz_progress')
-        .get('all_quizzes', defaultValue: {})
-        .keys
-        .cast<String>(),
-  );
-
-  String _getQuizImage(String quizId) {
-    final quiz = quizSummaries.firstWhere(
-          (q) => q.id == quizId,
-      orElse: () => QuizSummary(
-        id: '',
-        categoryId: '',
-        title: '',
-        totalQuestions: 0,
-        duration: '0',
-        rating: '0',
-        imageAsset: '',
-      ),
-    );
-    return quiz.imageAsset.isNotEmpty ? quiz.imageAsset : 'assets/placeholder.png';
-  }
-
+  // final box = Hive.box('quiz_progress');
+  //
+  // Map<String, dynamic>? lastQuiz;
+  // String selectedCategoryId = 'popular';
+  // String searchText = '';
+  //
+  // List<Map<String, dynamic>> allPlayedQuizzes = [];
+  // Timer? _expiryCheckTimer;
+  //
+  // final ongoingQuizIds = Set<String>.from(
+  //   Hive.box('quiz_progress')
+  //       .get('all_quizzes', defaultValue: {})
+  //       .keys
+  //       .cast<String>(),
+  // );
+  //
+  // String _getQuizImage(String quizId) {
+  //   final quiz = quizSummaries.firstWhere(
+  //         (q) => q.id == quizId,
+  //     orElse: () => QuizSummary(
+  //       id: '',
+  //       categoryId: '',
+  //       title: '',
+  //       totalQuestions: 0,
+  //       duration: '0',
+  //       rating: '0',
+  //       imageAsset: '',
+  //     ),
+  //   );
+  //   return quiz.imageAsset.isNotEmpty ? quiz.imageAsset : 'assets/placeholder.png';
+  // }
+  //
 
   @override
   void initState(){
@@ -62,140 +61,145 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
     scoreProvider.loadScores();
+    final quizProvider = Provider.of<QuizProvider>(context, listen: false);
+    quizProvider.loadAllPlayedQuizzes();
 
-    //listen to an changes in 'quiz_progress' box
-    box.listenable().addListener(_refreshLastQuiz);
+    // //listen to an changes in 'quiz_progress' box
+    // box.listenable().addListener(_refreshLastQuiz);
+    //
+    // // _loadLastQuiz();
+    // _loadAllPlayedQuizzes();
+    // _startPeriodicExpiryCheck();
 
-    // _loadLastQuiz();
-    _loadAllPlayedQuizzes();
-    _startPeriodicExpiryCheck();
+
   }
 
-  @override
-  void dispose(){
-    _expiryCheckTimer?.cancel();
-    super.dispose();
-  }
-
-  void _refreshLastQuiz(){
-    // _loadLastQuiz();
-    _loadAllPlayedQuizzes();
-    Provider.of<ScoreProvider>(context, listen: false).loadScores();
-  }
-
-  void _startPeriodicExpiryCheck() {
-    _expiryCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _checkExpiredQuizzes();
-    });
-  }
-
-  Future<void> _checkExpiredQuizzes() async {
-    final box = Hive.box('quiz_progress');
-    final all = Map<String, dynamic>.from(box.get('all_quizzes', defaultValue: {}) as Map);
-
-    for (var entry in all.entries) {
-      final quizId = entry.key;
-      final savedData = Map<String, dynamic>.from(entry.value);
-
-      QuizDetail? quizDetail;
-      try {
-        quizDetail = quizDetails.firstWhere((q) => q.id == quizId);
-      } catch (_) {
-        continue; // Skip if quiz not found in quizDetails
-      }
-
-      // Ensure startTime exists
-      if (savedData['startTime'] == null) continue;
-
-      // Calculate expiry time
-      final startTime = DateTime.parse(savedData['startTime']);
-      final durationMinutes = int.tryParse(quizDetail.duration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 30;
-      final expiry = startTime.add(Duration(minutes: durationMinutes));
-
-      // Skip if not expired
-      if (DateTime.now().isBefore(expiry)) continue;
-
-      // If already marked, skip
-      if (savedData['scoreAdded'] == true) continue;
-
-      // Calculate score
-      final selectedAnswers = Map<String, String>.from(savedData['selectedAnswers'] ?? {});
-      int correctCount = 0;
-      for (var q in quizDetail.questions) {
-        if (selectedAnswers[q.id] == q.correctOptionId) correctCount++;
-      }
-
-      // Save to all_scores
-      final allScores = Map<String, dynamic>.from(box.get('all_scores', defaultValue: {}) as Map);
-      final scoreData = {
-        'score': correctCount,
-        'attempted': selectedAnswers.length,
-        'total': quizDetail.totalQuestions,
-        'date': DateTime.now().toIso8601String(),
-      };
-      if (!allScores.containsKey(quizId)) allScores[quizId] = [];
-      allScores[quizId].add(scoreData);
-      await box.put('all_scores', allScores);
-
-      // Mark as score added
-      savedData['scoreAdded'] = true;
-      all[quizId] = savedData;
-    }
-
-    await box.put('all_quizzes', all);
-    setState(() {});
-  }
-
-  void _loadAllPlayedQuizzes() {
-    final box = Hive.box('quiz_progress');
-    final allSaved = Map<String, dynamic>.from(
-      box.get('all_quizzes', defaultValue: {}) as Map,
-    );
-
-    List<Map<String, dynamic>> loadedQuizzes = [];
-
-    allSaved.forEach((quizId, savedData) async {
-      try {
-        final quizDetail = quizDetails.firstWhere((q) => q.id == quizId);
-
-        if (savedData['startTime'] == null) {
-          savedData['startTime'] = DateTime.now().toIso8601String();
-
-          //save back to hive
-          final all = Map<String, dynamic>.from(box.get('all_quizzes', defaultValue: {}) as Map);
-          all[quizId] = savedData;
-          await box.put('all_quizzes', all);
-        }
-
-        // Check if quiz is unfinished
-        if (savedData['currentQuestionIndex'] < quizDetail.questions.length) {
-          loadedQuizzes.add({
-            'quizDetail': quizDetail,
-            'currentQuestionIndex': savedData['currentQuestionIndex'] ?? 0,
-            'selectedAnswers': Map<String, String>.from(savedData['selectedAnswers'] ?? {}),
-            'startTime' : savedData['startTime'],
-          });
-        }
-      } catch (e) {
-        debugPrint("Quiz not found for ID: $quizId");
-      }
-    });
-
-    setState(() {
-      allPlayedQuizzes = loadedQuizzes;
-    });
-  }
+  // @override
+  // void dispose(){
+  //   _expiryCheckTimer?.cancel();
+  //   super.dispose();
+  // }
+  //
+  // void _refreshLastQuiz(){
+  //   // _loadLastQuiz();
+  //   _loadAllPlayedQuizzes();
+  //   Provider.of<ScoreProvider>(context, listen: false).loadScores();
+  // }
+  //
+  // void _startPeriodicExpiryCheck() {
+  //   _expiryCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+  //     _checkExpiredQuizzes();
+  //   });
+  // }
+  //
+  // Future<void> _checkExpiredQuizzes() async {
+  //   final box = Hive.box('quiz_progress');
+  //   final all = Map<String, dynamic>.from(box.get('all_quizzes', defaultValue: {}) as Map);
+  //
+  //   for (var entry in all.entries) {
+  //     final quizId = entry.key;
+  //     final savedData = Map<String, dynamic>.from(entry.value);
+  //
+  //     QuizDetail? quizDetail;
+  //     try {
+  //       quizDetail = quizDetails.firstWhere((q) => q.id == quizId);
+  //     } catch (_) {
+  //       continue; // Skip if quiz not found in quizDetails
+  //     }
+  //
+  //     // Ensure startTime exists
+  //     if (savedData['startTime'] == null) continue;
+  //
+  //     // Calculate expiry time
+  //     final startTime = DateTime.parse(savedData['startTime']);
+  //     final durationMinutes = int.tryParse(quizDetail.duration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 30;
+  //     final expiry = startTime.add(Duration(minutes: durationMinutes));
+  //
+  //     // Skip if not expired
+  //     if (DateTime.now().isBefore(expiry)) continue;
+  //
+  //     // If already marked, skip
+  //     if (savedData['scoreAdded'] == true) continue;
+  //
+  //     // Calculate score
+  //     final selectedAnswers = Map<String, String>.from(savedData['selectedAnswers'] ?? {});
+  //     int correctCount = 0;
+  //     for (var q in quizDetail.questions) {
+  //       if (selectedAnswers[q.id] == q.correctOptionId) correctCount++;
+  //     }
+  //
+  //     // Save to all_scores
+  //     final allScores = Map<String, dynamic>.from(box.get('all_scores', defaultValue: {}) as Map);
+  //     final scoreData = {
+  //       'score': correctCount,
+  //       'attempted': selectedAnswers.length,
+  //       'total': quizDetail.totalQuestions,
+  //       'date': DateTime.now().toIso8601String(),
+  //     };
+  //     if (!allScores.containsKey(quizId)) allScores[quizId] = [];
+  //     allScores[quizId].add(scoreData);
+  //     await box.put('all_scores', allScores);
+  //
+  //     // Mark as score added
+  //     savedData['scoreAdded'] = true;
+  //     all[quizId] = savedData;
+  //   }
+  //
+  //   await box.put('all_quizzes', all);
+  //   setState(() {});
+  // }
+  //
+  // void _loadAllPlayedQuizzes() {
+  //   final box = Hive.box('quiz_progress');
+  //   final allSaved = Map<String, dynamic>.from(
+  //     box.get('all_quizzes', defaultValue: {}) as Map,
+  //   );
+  //
+  //   List<Map<String, dynamic>> loadedQuizzes = [];
+  //
+  //   allSaved.forEach((quizId, savedData) async {
+  //     try {
+  //       final quizDetail = quizDetails.firstWhere((q) => q.id == quizId);
+  //
+  //       if (savedData['startTime'] == null) {
+  //         savedData['startTime'] = DateTime.now().toIso8601String();
+  //
+  //         //save back to hive
+  //         final all = Map<String, dynamic>.from(box.get('all_quizzes', defaultValue: {}) as Map);
+  //         all[quizId] = savedData;
+  //         await box.put('all_quizzes', all);
+  //       }
+  //
+  //       // Check if quiz is unfinished
+  //       if (savedData['currentQuestionIndex'] < quizDetail.questions.length) {
+  //         loadedQuizzes.add({
+  //           'quizDetail': quizDetail,
+  //           'currentQuestionIndex': savedData['currentQuestionIndex'] ?? 0,
+  //           'selectedAnswers': Map<String, String>.from(savedData['selectedAnswers'] ?? {}),
+  //           'startTime' : savedData['startTime'],
+  //         });
+  //       }
+  //     } catch (e) {
+  //       debugPrint("Quiz not found for ID: $quizId");
+  //     }
+  //   });
+  //
+  //   setState(() {
+  //     allPlayedQuizzes = loadedQuizzes;
+  //   });
+  // }
 
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final quizProvider = Provider.of<QuizProvider>(context);
 
     final user = authProvider.user?['user'];
     final userName = user?['fullName'] ?? 'User';
-    final filteredQuizzes = quizSummaries.where((q) => q.categoryId == selectedCategoryId && q.title.toLowerCase().contains(searchText.toLowerCase())).toList();
-
-    final allScores = Map<String, dynamic>.from(box.get('all_scores', defaultValue: {}) as Map);
+    // final filteredQuizzes = quizSummaries.where((q) => q.categoryId == selectedCategoryId && q.title.toLowerCase().contains(searchText.toLowerCase())).toList();
+    //
+    // final allScores = Map<String, dynamic>.from(box.get('all_scores', defaultValue: {}) as Map);
 
     // final playedQuizIds = allScores.keys.toSet();
 
@@ -230,27 +234,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       SizedBox(height: 8.h),
                       TextField(
                         onChanged: (value) {
-                          setState(() {
-                            searchText = value;
+                          quizProvider.setSearchText(value);
 
-                            if (value.isEmpty) {
-                              selectedCategoryId = 'popular';
-                            } else {
-                              QuizSummary? matchingQuiz;
-                              try {
-                                //find the first quiz that matches the search
-                                matchingQuiz = quizSummaries.firstWhere(
-                                      (q) => q.title.toLowerCase().contains(value.toLowerCase()),
-                                );
-                              } catch (_) {
-                                matchingQuiz = null;
-                              }
+                          // setState(() {
+                            // searchText = value;
 
-                              if (matchingQuiz != null) {
-                                selectedCategoryId = matchingQuiz.categoryId;
-                              }
-                            }
-                          });
+                          //   if (value.isEmpty) {
+                          //     selectedCategoryId = 'popular';
+                          //   } else {
+                          //     QuizSummary? matchingQuiz;
+                          //     try {
+                          //       //find the first quiz that matches the search
+                          //       matchingQuiz = quizSummaries.firstWhere(
+                          //             (q) => q.title.toLowerCase().contains(value.toLowerCase()),
+                          //       );
+                          //     } catch (_) {
+                          //       matchingQuiz = null;
+                          //     }
+                          //
+                          //     if (matchingQuiz != null) {
+                          //       selectedCategoryId = matchingQuiz.categoryId;
+                          //     }
+                          //   }
+                          // });
                         },
                         decoration: InputDecoration(
                           hintText: "Search",
@@ -304,11 +310,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemCount: categories.length,
                             itemBuilder: (context, index) {
                               final cate = categories[index];
-                              bool isActive = cate.id == selectedCategoryId;
+                              bool isActive = cate.id == quizProvider.selectedCategoryId;
                               return GestureDetector(
                                 onTap: () {
                                   setState(() {
-                                    selectedCategoryId = cate.id;
+                                    quizProvider.setSelectedCategory(cate.id);
+                                    // quizProvider = cate.id;
                                   });
                                 },
                                 child: Padding(
@@ -323,50 +330,83 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(height: 20.h),
 
                         // ======= QUIZ CARDS =======
-                        ValueListenableBuilder(
-                            valueListenable: box.listenable(),
-                            builder: (context, Box hiveBox, _) {
-                              final allScores = Map<String, dynamic>.from(hiveBox.get('all_scores', defaultValue: {}) as Map);
-                              final allQuizzes = Map<String, dynamic>.from(hiveBox.get('all_quizzes', defaultValue: {}) as Map);
 
-                              final playedQuizIds = allScores.keys.toSet();
-                              final ongoingQuizIds = allQuizzes.keys.toSet();
-
-                              return SingleChildScrollView(
-                                child: Column(
-                                  children: filteredQuizzes.map((q) {
-                                    final isOngoing = ongoingQuizIds.contains(q.id);
-                                    final isPlayed = playedQuizIds.contains(q.id);
-
-                                    return Column(
-                                      children: [
-                                        GestureDetector(
-                                          onTap: isOngoing ? null :
-                                              () {
-                                            final quizDetail = quizDetails.firstWhere((d) => d.id == q.id);
-                                            Navigator.push(context, MaterialPageRoute(
-                                              builder: (_) => DetailsScreen(quizDetail: quizDetail),
-                                            ));
-                                            // Navigator.pushNamed(context, '/detail');
-                                          },
-                                          child: _buildQuizCard(
-                                            title: q.title,
-                                            questions: '${q.totalQuestions} Question',
-                                            duration: q.duration,
-                                            rating: q.rating,
-                                            imageAsset: q.imageAsset,
-                                            bordered: isPlayed,
-                                            disabled: isOngoing,
-                                          ),
-                                        ),
-                                        SizedBox(height: 15.h,),
-                                      ],
-                                    );
-                                  }).toList(),
+                        Column(
+                          children: quizProvider.filteredQuizzes.map((q) {
+                            final isOngoing = quizProvider.ongoingQuizIds.contains(q.id);
+                            final isPlayed = quizProvider.playedQuizIds.contains(q.id);
+                            return Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: isOngoing ? null :
+                                      () {
+                                    final quizDetail = quizDetails.firstWhere((d) => d.id == q.id);
+                                    Navigator.push(context, MaterialPageRoute(
+                                      builder: (_) => DetailsScreen(quizDetail: quizDetail),
+                                    ));
+                                    // Navigator.pushNamed(context, '/detail');
+                                  },
+                                  child: _buildQuizCard(
+                                    title: q.title,
+                                    questions: '${q.totalQuestions} Question',
+                                    duration: q.duration,
+                                    rating: q.rating,
+                                    imageAsset: q.imageAsset,
+                                    bordered: isPlayed,
+                                    disabled: isOngoing,
+                                  ),
                                 ),
-                              );
-                            }
-                        ),
+                                SizedBox(height: 15.h,),
+                              ],
+                            );
+                          }).toList(),
+                        )
+
+
+                        // ValueListenableBuilder(
+                        //     valueListenable: box.listenable(),
+                        //     builder: (context, Box hiveBox, _) {
+                        //       final allScores = Map<String, dynamic>.from(hiveBox.get('all_scores', defaultValue: {}) as Map);
+                        //       final allQuizzes = Map<String, dynamic>.from(hiveBox.get('all_quizzes', defaultValue: {}) as Map);
+                        //
+                        //       final playedQuizIds = allScores.keys.toSet();
+                        //       final ongoingQuizIds = allQuizzes.keys.toSet();
+                        //
+                        //       return SingleChildScrollView(
+                        //         child: Column(
+                        //           children: quizProvider.filteredQuizzes.map((q) {
+                        //             final isOngoing = ongoingQuizIds.contains(q.id);
+                        //             final isPlayed = playedQuizIds.contains(q.id);
+                        //
+                        //             return Column(
+                        //               children: [
+                        //                 GestureDetector(
+                        //                   onTap: isOngoing ? null :
+                        //                       () {
+                        //                     final quizDetail = quizDetails.firstWhere((d) => d.id == q.id);
+                        //                     Navigator.push(context, MaterialPageRoute(
+                        //                       builder: (_) => DetailsScreen(quizDetail: quizDetail),
+                        //                     ));
+                        //                     // Navigator.pushNamed(context, '/detail');
+                        //                   },
+                        //                   child: _buildQuizCard(
+                        //                     title: q.title,
+                        //                     questions: '${q.totalQuestions} Question',
+                        //                     duration: q.duration,
+                        //                     rating: q.rating,
+                        //                     imageAsset: q.imageAsset,
+                        //                     bordered: isPlayed,
+                        //                     disabled: isOngoing,
+                        //                   ),
+                        //                 ),
+                        //                 SizedBox(height: 15.h,),
+                        //               ],
+                        //             );
+                        //           }).toList(),
+                        //         ),
+                        //       );
+                        //     }
+                        // ),
                         // White container with completed quizzes
                         // SizedBox(height: 150.h),
                       ],
@@ -459,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 // SizedBox(height: 200.h,),
-                if (allPlayedQuizzes.isNotEmpty)
+                if (quizProvider.allPlayedQuizzes.isNotEmpty)
                   Container (
                     height: 200.h,
                     decoration: BoxDecoration(
@@ -491,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     SizedBox(height: 5.h,),
 
-                    if(allPlayedQuizzes.isNotEmpty) ...[
+                    if(quizProvider.allPlayedQuizzes.isNotEmpty) ...[
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text("Continue Pending Quizzes",
@@ -503,7 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                     SizedBox(height: 15.h,),
-                    _buildContinueQuizzesList(),
+                    _buildContinueQuizzesList(quizProvider),
 
 
                   ],
@@ -875,6 +915,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //                       ],
   //                     ),
   //
+  //                     // SizedBox(height: 3.h),
   //
   //                     // Continue button
   //                     SizedBox(
@@ -922,30 +963,59 @@ class _HomeScreenState extends State<HomeScreen> {
   // }
 
 
-  Widget _buildContinueQuizzesList() {
-    final quizProvider = Provider.of<QuizProvider>(context);
-    if (quizProvider.ongoingQuizzes.isEmpty) {
+  Widget _buildContinueQuizzesList(QuizProvider quizProvider) {
+    if (quizProvider.allPlayedQuizzes.isEmpty) {
       return const SizedBox();
     }
 
     return SizedBox(
-      height: 150.h, // Adjust as needed
+      height: 150.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        separatorBuilder: (_, __) => SizedBox(width: 12.w),
-        itemCount: allPlayedQuizzes.length,
-        itemBuilder: (context, index) {
-          final quizData = allPlayedQuizzes[index];
+          itemBuilder: (context, index) {
+          final quizData = quizProvider.allPlayedQuizzes[index];
           final quizDetail = quizData['quizDetail'] as QuizDetail;
-          // return _buildContinueQuizCard(quizData);
           return ContinueQuizCard(
             quizData: quizData,
-            quizImage: _getQuizImage(quizDetail.id),
-            onRefresh: _loadAllPlayedQuizzes,
+            quizImage: quizProvider.getQuizImage(quizDetail.id),
           );
-        },
+          },
+          separatorBuilder: (_, _) => SizedBox(width: 12.w,),
+          itemCount: quizProvider.allPlayedQuizzes.length,
       ),
     );
   }
+
+  // Widget _buildContinueQuizzesList(QuizProvider quizProvider) {
+  //   // if (allPlayedQuizzes.isEmpty) {
+  //   //   //do nothing
+  //   //   return const SizedBox();
+  //   // }
+  //   if (quizProvider.allPlayedQuizzes.isEmpty) {
+  //     return const SizedBox();
+  //   }
+  //
+  //   return SizedBox(
+  //     height: 150.h, // Adjust as needed
+  //     child: ListView.separated(
+  //       scrollDirection: Axis.horizontal,
+  //       separatorBuilder: (_, __) => SizedBox(width: 12.w),
+  //       itemCount: quizProvider.allPlayedQuizzes.length,
+  //       itemBuilder: (context, index) {
+  //         final quizData = quizProvider.allPlayedQuizzes.length;
+  //         final quizDetail = quizData['quizDetail'];
+  //         // final quizDetail = quizData['quizDetail'] as QuizDetail;
+  //         // final quizDetail = quizData['quizDetail'] as QuizDetail;
+  //         // return _buildContinueQuizCard(quizData);
+  //         return ContinueQuizCard(
+  //           quizData: quizData,
+  //           quizImage: quizProvider.getQuizImage(quizDetail.id),
+  //
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
+
 
 }

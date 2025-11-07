@@ -28,6 +28,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => AuthProvider()),
           ChangeNotifierProvider(create: (_) => ScoreProvider()..loadScores()),
           ChangeNotifierProvider(create: (_) => SoundProvider()),
+
           ChangeNotifierProvider(create: (_) => QuizProvider()),
         ],
         child: ScreenUtilInit(

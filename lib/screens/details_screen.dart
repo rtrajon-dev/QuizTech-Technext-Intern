@@ -4,6 +4,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:loginsignup/constants/app_colors.dart';
 import 'package:loginsignup/models/quiz_model.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
+import 'package:loginsignup/provider/quiz_provider.dart';
 import 'package:provider/provider.dart';
 import 'quiz_screen.dart';
 
@@ -22,6 +23,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final quizProvider = Provider.of<QuizProvider>(context);
     final user = authProvider.user?['user'];
     final quiz = widget.quizDetail;
 
@@ -241,35 +243,55 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       SizedBox(
                         width: double.infinity,
                         height: 50.h,
-                        child: FutureBuilder(
-                          future: Hive.openBox('quiz_progress'),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState != ConnectionState.done) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
+                        child: Builder(
+                          // future: Hive.openBox('quiz_progress'),
+                          builder: (context) {
+                            // if (snapshot.connectionState != ConnectionState.done) {
+                            //   return const Center(child: CircularProgressIndicator());
+                            // }
 
-                            final box = snapshot.data!;
-                            final allScoresRaw = box.get('all_scores');
-                            final Map<String, dynamic> allScores =
-                            (allScoresRaw is Map) ? Map<String, dynamic>.from(allScoresRaw) : {};
+                            // final box = snapshot.data!;
+                            // final allScoresRaw = box.get('all_scores');
+                            // final Map<String, dynamic> allScores =
+                            // (allScoresRaw is Map) ? Map<String, dynamic>.from(allScoresRaw) : {};
+                            //
+                            // final quizId = widget.quizDetail.id;
+                            // final hasPlayed = allScores.containsKey(quizId);
+                            //
+                            // final String buttonText = hasPlayed ? "Play Again" : "Start Quiz";
+                            // final Color buttonColor = hasPlayed ? Colors.orange : Colors.blue;
 
                             final quizId = widget.quizDetail.id;
-                            final hasPlayed = allScores.containsKey(quizId);
-
-                            final String buttonText = hasPlayed ? "Play Again" : "Start Quiz";
-                            final Color buttonColor = hasPlayed ? Colors.orange : Colors.blue;
-
+                            final isOngoing = quizProvider.ongoingQuizIds.contains(quizId);
+                            final hasBeenPlayed = quizProvider.playedQuizIds.contains(quizId);
+                            final String buttonText = isOngoing ? "Continue Quiz" : (hasBeenPlayed ? "Play Again" : "Start Quiz");
+                            final Color buttonColor = isOngoing ? Colors.green : (hasBeenPlayed ? Colors.orange : Colors.blue);
                             return ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => QuizScreen(quizDetail: widget.quizDetail),
-                                  ),
-                                ).then((_) {
-                                  Navigator.pop(context);
-                                  setState(() {}); // refresh button state after returning
-                                });
+                              onPressed: () async {
+                                await quizProvider.startQuiz(widget.quizDetail);
+
+                                if (context.mounted) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => QuizScreen(quizDetail: widget.quizDetail),
+                                      )
+                                  ). then((_) {
+                                    Navigator.pop(context);
+                                    setState(() {
+
+                                    });
+                                  });
+                                }
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (_) => QuizScreen(quizDetail: widget.quizDetail),
+                                //   ),
+                                // ).then((_) {
+                                //   Navigator.pop(context);
+                                //   setState(() {}); // refresh button state after returning
+                                // });
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: buttonColor,

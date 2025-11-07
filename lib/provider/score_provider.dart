@@ -11,4 +11,6 @@ class ScoreProvider with ChangeNotifier {
     _scores = _quizService.getSortedScoresDescending();
     notifyListeners();
   }
+
+
 }
