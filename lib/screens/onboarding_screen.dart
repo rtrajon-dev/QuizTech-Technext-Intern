@@ -16,7 +16,7 @@ class OnboardingScreen extends StatelessWidget {
                 height: 600,
                 width: 600 ,
                 decoration: BoxDecoration(color: Colors.lightBlue, shape: BoxShape.circle),
-          )),
+              )),
           Row(
             children: [
               SizedBox(

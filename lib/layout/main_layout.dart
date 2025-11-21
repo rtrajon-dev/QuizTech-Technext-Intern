@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:loginsignup/constants/app_colors.dart';
 import 'package:loginsignup/layout/drawer_layout.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
+import 'package:loginsignup/provider/score_provider.dart';
 import 'package:loginsignup/screens/home_screen.dart';
 import 'package:loginsignup/screens/score_screen.dart';
 import 'package:loginsignup/screens/profile_screen.dart';
+import 'package:loginsignup/widgets/avatar_with_score.dart';
 import 'package:provider/provider.dart';
 
 class MainLayout extends StatefulWidget {
@@ -76,17 +78,12 @@ class _MainLayoutState extends State<MainLayout> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16),
-                child: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.white,
-                  backgroundImage: user['profileImg'] != null &&
-                      user['profileImg'].toString().isNotEmpty
-                      ? NetworkImage(user['profileImg'])
-                      : const AssetImage('assets/default_avatar.png')
-                  as ImageProvider,
+                child: AvatarWithScore(
+                  profileImg: user['profileImg'] ?? '',
                 ),
               ),
             ],
@@ -99,7 +96,7 @@ class _MainLayoutState extends State<MainLayout> {
           if (notification.metrics.axis == Axis.vertical) {
             final offset = notification.metrics.pixels;
             setState(() {
-              _appBarOpacity = (offset / 180).clamp(0.0, 1.0);
+              _appBarOpacity = (offset / 100).clamp(0.0, 1.0);
             });
           }
           return false;

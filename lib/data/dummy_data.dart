@@ -117,7 +117,7 @@ final List<QuizSummary> quizSummaries = [
     imageAsset: 'assets/graphic.png',
   ),
 ];
-  // Add other quizzes for other categories...
+// Add other quizzes for other categories...
 
 // Full details used in DetailsScreen / QuizScreen
 final List<QuizDetail> quizDetails = [

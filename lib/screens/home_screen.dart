@@ -7,8 +7,10 @@ import 'package:loginsignup/constants/app_colors.dart';
 import 'package:loginsignup/models/quiz_model.dart';
 import 'package:loginsignup/data/dummy_data.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
+import 'package:loginsignup/provider/score_provider.dart';
 import 'package:loginsignup/screens/details_screen.dart';
 import 'package:loginsignup/screens/quiz_screen.dart';
+import 'package:loginsignup/widgets/completed_quiz_card.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -56,12 +58,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState(){
     super.initState();
 
+    final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
+    scoreProvider.loadScores();
+
     //listen to an changes in 'quiz_progress' box
     box.listenable().addListener(_refreshLastQuiz);
 
     // _loadLastQuiz();
     _loadAllPlayedQuizzes();
     _startPeriodicExpiryCheck();
+
+
   }
 
   @override
@@ -73,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _refreshLastQuiz(){
     // _loadLastQuiz();
     _loadAllPlayedQuizzes();
+    Provider.of<ScoreProvider>(context, listen: false).loadScores();
   }
 
   void _startPeriodicExpiryCheck() {
@@ -138,9 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
-
-
-
   void _loadAllPlayedQuizzes() {
     final box = Hive.box('quiz_progress');
     final allSaved = Map<String, dynamic>.from(
@@ -185,136 +190,140 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+
     final user = authProvider.user?['user'];
     final userName = user?['fullName'] ?? 'User';
     final filteredQuizzes = quizSummaries.where((q) => q.categoryId == selectedCategoryId && q.title.toLowerCase().contains(searchText.toLowerCase())).toList();
 
     final allScores = Map<String, dynamic>.from(box.get('all_scores', defaultValue: {}) as Map);
+
     // final playedQuizIds = allScores.keys.toSet();
 
     return Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 100.h),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Hello $userName",
-                            style: TextStyle(
-                                fontSize: 14.sp,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w400)),
-                        SizedBox(height: 8.h),
-                        Text("Let's test your knowledge",
-                            style: TextStyle(
-                                fontSize: 20.sp,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                        SizedBox(height: 8.h),
-                        TextField(
-                          onChanged: (value) {
-                            setState(() {
-                              searchText = value;
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 100.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Hello $userName",
+                          style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400)),
+                      SizedBox(height: 8.h),
+                      Text("Let's test your knowledge",
+                          style: TextStyle(
+                              fontSize: 20.sp,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                      SizedBox(height: 8.h),
+                      TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            searchText = value;
 
-                              if (value.isEmpty) {
-                                selectedCategoryId = 'popular';
-                              } else {
-                                QuizSummary? matchingQuiz;
-                                try {
-                                  //find the first quiz that matches the search
-                                  matchingQuiz = quizSummaries.firstWhere(
-                                        (q) => q.title.toLowerCase().contains(value.toLowerCase()),
-                                  );
-                                } catch (_) {
-                                  matchingQuiz = null;
-                                }
-
-                                if (matchingQuiz != null) {
-                                  selectedCategoryId = matchingQuiz.categoryId;
-                                }
+                            if (value.isEmpty) {
+                              selectedCategoryId = 'popular';
+                            } else {
+                              QuizSummary? matchingQuiz;
+                              try {
+                                //find the first quiz that matches the search
+                                matchingQuiz = quizSummaries.firstWhere(
+                                      (q) => q.title.toLowerCase().contains(value.toLowerCase()),
+                                );
+                              } catch (_) {
+                                matchingQuiz = null;
                               }
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Search",
-                            hintStyle: const TextStyle(color: Colors.grey),
-                            prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 10.h, horizontal: 15.w),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                              borderSide: BorderSide.none,
-                            ),
+
+                              if (matchingQuiz != null) {
+                                selectedCategoryId = matchingQuiz.categoryId;
+                              }
+                            }
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: "Search",
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 10.h, horizontal: 15.w),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
                           ),
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                //quiz card
+                Container(
+                  width: double.infinity,
+                  // height: 400.h,
+                  // height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32.r),
+                      topRight: Radius.circular(32.r),
                     ),
                   ),
-                  Container(
-                    width: double.infinity,
-                    height: 751.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(32.r),
-                        topRight: Radius.circular(32.r),
-                      ),
-                    ),
-                    child: Padding(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 48.w,
-                            height: 4.h,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
+                  child: Padding(
+                    padding:
+                    EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 48.w,
+                          height: 4.h,
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
-                          SizedBox(height: 15.h),
+                        ),
+                        SizedBox(height: 15.h),
 
-                          // ======= CATEGORY TABS =======
-                          SizedBox(
-                            height: 40.h,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: categories.length,
-                              itemBuilder: (context, index) {
-                                final cate = categories[index];
-                                bool isActive = cate.id == selectedCategoryId;
-                                return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedCategoryId = cate.id;
-                                    });
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                    child: _buildCategory(cate.title, isActive),
-                                  ),
-                                );
-                              },
-                            ),
+                        // ======= CATEGORY TABS =======
+                        SizedBox(
+                          height: 40.h,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: categories.length,
+                            itemBuilder: (context, index) {
+                              final cate = categories[index];
+                              bool isActive = cate.id == selectedCategoryId;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedCategoryId = cate.id;
+                                  });
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                  child: _buildCategory(cate.title, isActive),
+                                ),
+                              );
+                            },
                           ),
+                        ),
 
-                          SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                          // ======= QUIZ CARDS =======
-                          ValueListenableBuilder(
+                        // ======= QUIZ CARDS =======
+                        ValueListenableBuilder(
                             valueListenable: box.listenable(),
                             builder: (context, Box hiveBox, _) {
                               final allScores = Map<String, dynamic>.from(hiveBox.get('all_scores', defaultValue: {}) as Map);
@@ -357,64 +366,154 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               );
                             }
-
-
-                          ),
-
-                          SizedBox(height: 150.h),
-
-                        ],
-                      ),
+                        ),
+                        // White container with completed quizzes
+                        // SizedBox(height: 150.h),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            // ======= CONTINUE QUIZ =======
-            Positioned(
-              bottom: 0.h,
-                left: 10.w,
-                right: 10.w,
-                child: Container(
+                ),
+                //quiz history
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(0.w),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10.r),
+                    // borderRadius: BorderRadius.circular(12.r),
                     boxShadow: const [
                       BoxShadow(
-                        // color: Color(0x37333333),
-                        color: Colors.white,
-                        offset: Offset(0, -20),
-                        blurRadius: 55,
+                        color: Color(0x1A333333),
+                        // color: Colors.black,
+                        offset: Offset(0, 0),
+                        blurRadius: 50,
                       ),
                     ],
                   ),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 5.h,),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 15.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Quiz History",
+                          style: TextStyle(
+                            color: Colors.blueGrey,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
 
-                      if(allPlayedQuizzes.isNotEmpty) ...[
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text("Continue Pending Quizzes",
-                              style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontFamily: "Ubuntu",
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold)),
+                        // List of completed quizzes
+                        Consumer<ScoreProvider>(
+                          builder: (context, scoreProvider, _) {
+                            final scores = scoreProvider.scores;
+
+                            if (scores.isEmpty) {
+                              return Padding(
+                                padding: EdgeInsets.symmetric(vertical: 5.h),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Motivational icon or image
+                                      Icon(
+                                        Icons.emoji_events_outlined,
+                                        size: 36.sp,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      SizedBox(height: 8.h),
+                                      // Motivational text
+                                      Text(
+                                        "Your first quiz awaits!\nChallenge yourself & start learning!",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.3, // makes it a bit more readable
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return Column(
+                              children: [
+                                for (var entry in scores)
+                                  CompletedQuizCard(quizEntry: entry, quizSummaries: quizSummaries,),
+                              ],
+                            );
+                          },
                         ),
                       ],
-                      SizedBox(height: 15.h,),
-                      _buildContinueQuizzesList(),
-
-
-                    ],
+                    ),
                   ),
-                )
+                ),
+                Container(
+                  height: 50.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                  ),
+                ),
+                // SizedBox(height: 200.h,),
+                if (allPlayedQuizzes.isNotEmpty)
+                  Container (
+                    height: 200.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                    ),
+                  ),
+              ],
             ),
-            SizedBox(height: 40.h),
-          ],
-        ),
-      );
+          ),
+          // ======= CONTINUE QUIZ =======
+          Positioned(
+              bottom: 0.h,
+              left: 10.w,
+              right: 10.w,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.r),
+                  boxShadow: const [
+                    BoxShadow(
+                      // color: Color(0x37333333),
+                      color: Colors.white,
+                      offset: Offset(0, -20),
+                      blurRadius: 55,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 5.h,),
+
+                    if(allPlayedQuizzes.isNotEmpty) ...[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("Continue Pending Quizzes",
+                            style: TextStyle(
+                                fontSize: 18.sp,
+                                fontFamily: "Ubuntu",
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                    SizedBox(height: 15.h,),
+                    _buildContinueQuizzesList(),
+
+
+                  ],
+                ),
+              )
+          ),
+          SizedBox(height: 40.h),
+        ],
+      ),
+    );
 
   }
 

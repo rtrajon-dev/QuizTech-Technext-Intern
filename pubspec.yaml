@@ -46,6 +46,7 @@ dependencies:
   build_runner: ^2.5.4
   flutter_launcher_icons: ^0.14.4
   fluttertoast: ^9.0.0
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
@@ -85,10 +86,10 @@ flutter:
   # list giving the asset and other descriptors for the fonts. For
   # example:
   fonts:
-     - family: Ubuntu
-       fonts:
-         - asset: fonts/Ubuntu-Bold.ttf
-         - asset: fonts/Ubuntu-Regular.ttf
+    - family: Ubuntu
+      fonts:
+        - asset: fonts/Ubuntu-Bold.ttf
+        - asset: fonts/Ubuntu-Regular.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:
@@ -96,5 +97,11 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/illustration.png"
+
+
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

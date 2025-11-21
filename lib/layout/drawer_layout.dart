@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loginsignup/constants/app_colors.dart';
+import 'package:loginsignup/provider/sound_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:loginsignup/provider/auth_provider.dart';
 
@@ -21,6 +22,8 @@ class _DrawerLayoutState extends State<DrawerLayout> {
     final user = authProvider.user?['user'];
     final userName = user?['fullName'] ?? 'user';
     final userProfile = user?['profileImg'];
+
+    final soundProvider = Provider.of<SoundProvider>(context);
 
 
     return Drawer(
@@ -93,11 +96,11 @@ class _DrawerLayoutState extends State<DrawerLayout> {
           const Divider(),
 
           SwitchListTile(
-            value: soundOn,
+            value: soundProvider.soundOn,
             title: const Text("Sound"),
             secondary: const Icon(Icons.volume_up_outlined),
             onChanged: (value) {
-              setState(() => soundOn = value);
+              soundProvider.toggleSound(value);
             },
           ),
 
